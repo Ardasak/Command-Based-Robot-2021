@@ -6,9 +6,11 @@ package frc.robot.commands.autonomous;
 
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.PIDCommand;
 import frc.robot.ADIS_Gyro;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.GyroSubsystem;
 
@@ -17,22 +19,26 @@ import frc.robot.subsystems.GyroSubsystem;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class PIDCommand_Test extends PIDCommand {
   GyroSubsystem m_gyrosubsystem;
+  DriveSubsystem m_drivesubsystem;
+  int mode;
   
   /** Creates a new PIDCommand_Test. */
-  public PIDCommand_Test(DriveSubsystem m_drivesubsystem, GyroSubsystem m_gyrosubsystem) {
+  public PIDCommand_Test(DriveSubsystem m_drivesubsystem, GyroSubsystem m_gyrosubsystem, int mode) {
     super(
         // The controller that the command will use
         new PIDController(Constants.PID.kP,Constants.PID.kI,Constants.PID.kD),
         // This should return the measurement
         () -> m_gyrosubsystem.getGyroAngle(),
         // This should return the setpoint (can also be a constant)
-        () -> 90,
+        () -> 0,
         // This uses the output
         output -> {
-          m_drivesubsystem.arcadeDrive(0,-output);
+          m_drivesubsystem.arcadeDrive(RobotContainer.stick.getY(),-output);
+          SmartDashboard.putNumber("output",output);
         }, m_drivesubsystem);
         this.m_gyrosubsystem = m_gyrosubsystem;
-       
+        this.m_drivesubsystem = m_drivesubsystem;
+        this.mode = mode;
        
       
     // Use addRequirements() here to declare subsystem dependencies.
@@ -44,10 +50,15 @@ public void initialize() {
   this.m_gyrosubsystem.resetGyro();
 }
 
+@Override
+public void end(boolean interrupted) {
+  m_drivesubsystem.stopMotors();
+}
+
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if(this.m_gyrosubsystem.getGyroAngle()>87&&this.m_gyrosubsystem.getGyroAngle()<93){
+    if(mode==0){
       return true;
     }
     return false;
